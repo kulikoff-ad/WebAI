@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Generator</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            color: #e4e4e4;
+            min-height: 100vh;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .container {
+            max-width: 900px;
+            width: 100%;
+            background: rgba(30, 30, 46, 0.9);
+            border-radius: 24px;
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(10px);
+            animation: fadeIn 0.6s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 40px;
+            font-size: 2.5rem;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .form-group {
+            margin-bottom: 25px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 10px;
+            font-size: 1.1rem;
+            color: #a0a0b0;
+        }
+
+        select, textarea {
+            width: 100%;
+            padding: 15px;
+            background: rgba(50, 50, 70, 0.6);
+            border: 2px solid rgba(102, 126, 234, 0.3);
+            border-radius: 12px;
+            color: #e4e4e4;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            outline: none;
+        }
+
+        select:focus, textarea:focus {
+            border-color: #667eea;
+            box-shadow: 0 0 20px rgba(102, 126, 234, 0.3);
+        }
+
+        select {
+            cursor: pointer;
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23e4e4e4' d='M6 9L1 4h10z'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 15px center;
+            padding-right: 40px;
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 150px;
+            font-family: inherit;
+        }
+
+        .button-container {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        button {
+            padding: 15px 50px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 25px rgba(102, 126, 234, 0.6);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        button:disabled {
+            background: linear-gradient(135deg, #4a4a5e 0%, #3a3a4e 100%);
+            cursor: not-allowed;
+            box-shadow: none;
+        }
+
+        .result-container {
+            background: rgba(50, 50, 70, 0.4);
+            border-radius: 16px;
+            padding: 25px;
+            min-height: 200px;
+            border: 2px solid rgba(102, 126, 234, 0.2);
+            animation: slideIn 0.4s ease-out;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .result-container h3 {
+            margin-bottom: 15px;
+            color: #667eea;
+        }
+
+        .result-content {
+            color: #d0d0d0;
+            line-height: 1.6;
+            white-space: pre-wrap;
+        }
+
+        .result-content img, .result-content video, .result-content audio {
+            max-width: 100%;
+            border-radius: 12px;
+            margin-top: 15px;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.4);
+        }
+
+        .loader {
+            display: none;
+            text-align: center;
+            padding: 20px;
+        }
+
+        .loader.active {
+            display: block;
+        }
+
+        .spinner {
+            border: 4px solid rgba(102, 126, 234, 0.2);
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 25px;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            button {
+                width: 100%;
+            }
+        }
+
+        .error {
+            color: #ff6b6b;
+            padding: 15px;
+            background: rgba(255, 107, 107, 0.1);
+            border-radius: 8px;
+            border-left: 4px solid #ff6b6b;
+        }
+
+        .success {
+            color: #51cf66;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🤖 AI Generator</h1>
+        
+        <div class="form-group">
+            <label for="mode">Режим работы:</label>
+            <select id="mode">
+                <option value="chat">💬 Чат</option>
+                <option value="image">🎨 Генерация изображений</option>
+                <option value="video">🎬 Генерация видео</option>
+                <option value="audio">🎵 Генерация голоса</option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label for="prompt">Введите ваш запрос:</label>
+            <textarea id="prompt" placeholder="Опишите, что вы хотите создать..."></textarea>
+        </div>
+
+        <div class="button-container">
+            <button id="generateBtn" onclick="generate()">✨ Сгенерировать</button>
+        </div>
+
+        <div class="loader" id="loader">
+            <div class="spinner"></div>
+            <p style="margin-top: 15px; color: #a0a0b0;">Генерация...</p>
+        </div>
+
+        <div class="result-container" id="resultContainer" style="display: none;">
+            <h3>📋 Результат:</h3>
+            <div class="result-content" id="resultContent"></div>
+        </div>
+    </div>
+
+    <script>
+        // API ключ
+        const API_KEY = 'sk_3GTNciN6yPTfRTQ2l4KhvnDQe0AXQh7K';
+
+        async function generate() {
+            const mode = document.getElementById('mode').value;
+            const prompt = document.getElementById('prompt').value.trim();
+            const loader = document.getElementById('loader');
+            const resultContainer = document.getElementById('resultContainer');
+            const resultContent = document.getElementById('resultContent');
+            const generateBtn = document.getElementById('generateBtn');
+
+            if (!prompt) {
+                alert('Пожалуйста, введите запрос!');
+                return;
+            }
+
+            // Показываем загрузку
+            loader.classList.add('active');
+            resultContainer.style.display = 'none';
+            generateBtn.disabled = true;
+            resultContent.innerHTML = '';
+
+            try {
+                let result;
+
+                switch(mode) {
+                    case 'chat':
+                        result = await generateChat(prompt);
+                        break;
+                    case 'image':
+                        result = await generateImage(prompt);
+                        break;
+                    case 'video':
+                        result = await generateVideo(prompt);
+                        break;
+                    case 'audio':
+                        result = await generateAudio(prompt);
+                        break;
+                }
+
+                resultContent.innerHTML = result;
+                resultContainer.style.display = 'block';
+
+            } catch (error) {
+                resultContent.innerHTML = `<div class="error">❌ Ошибка: ${error.message}</div>`;
+                resultContainer.style.display = 'block';
+            } finally {
+                loader.classList.remove('active');
+                generateBtn.disabled = false;
+            }
+        }
+
+        async function generateChat(prompt) {
+            // Используем Pollinations с дополнительными параметрами
+            const response = await fetch('https://text.pollinations.ai/' + encodeURIComponent(prompt), {
+                method: 'GET',
+                headers: {
+                    'Authorization': `Bearer ${API_KEY}`,
+                }
+            });
+            
+            if (!response.ok) {
+                throw new Error('Ошибка при получении ответа от сервера');
+            }
+
+            const text = await response.text();
+            return `<div class="success">${text}</div>`;
+        }
+
+        async function generateImage(prompt) {
+            // Pollinations Image API с авторизацией через параметры
+            const seed = Math.floor(Math.random() * 1000000);
+            const imageUrl = `https://image.pollinations.ai/prompt/${encodeURIComponent(prompt)}?width=1024&height=1024&seed=${seed}&nologo=true&enhance=true`;
+            
+            return new Promise((resolve, reject) => {
+                const img = new Image();
+                img.onload = () => {
+                    resolve(`<img src="${imageUrl}" alt="Generated image" />`);
+                };
+                img.onerror = () => {
+                    reject(new Error('Не удалось загрузить изображение'));
+                };
+                img.src = imageUrl;
+            });
+        }
+
+        async function generateVideo(prompt) {
+            // Используем улучшенную генерацию концепт-кадров для видео
+            const seed = Math.floor(Math.random() * 1000000);
+            const videoFrameUrl = `https://image.pollinations.ai/prompt/${encodeURIComponent(prompt + " cinematic 4k video frame, high quality, detailed")}?width=1280&height=720&seed=${seed}&nologo=true&enhance=true`;
+            
+            return `
+                <div style="text-align: center;">
+                    <p style="color: #ffa500; margin-bottom: 15px;">⚠️ Генерация видео: создан высококачественный концепт-кадр</p>
+                    <p style="margin-bottom: 15px;">Pollinations API пока не поддерживает прямую генерацию видео, но вот концепт:</p>
+                    <img src="${videoFrameUrl}" alt="Video concept frame" style="max-width: 100%; border-radius: 12px;" />
+                </div>
+            `;
+        }
+
+        async function generateAudio(prompt) {
+            // Генерируем текст для озвучивания с использованием API
+            const response = await fetch('https://text.pollinations.ai/' + encodeURIComponent(`Create a natural, conversational script for text-to-speech based on this request: ${prompt}. Keep it concise and engaging.`), {
+                method: 'GET',
+                headers: {
+                    'Authorization': `Bearer ${API_KEY}`,
+                }
+            });
+            
+            if (!response.ok) {
+                throw new Error('Ошибка при получении текста для озвучивания');
+            }
+
+            const text = await response.text();
+            
+            return `
+                <div>
+                    <p style="color: #ffa500; margin-bottom: 15px;">🎵 Генерация аудио</p>
+                    <p style="margin-bottom: 10px;"><strong>Сгенерированный скрипт для озвучивания:</strong></p>
+                    <div style="background: rgba(30, 30, 46, 0.6); padding: 15px; border-radius: 8px; border-left: 4px solid #667eea;">
+                        ${text}
+                    </div>
+                    <p style="margin-top: 15px; color: #a0a0b0; font-size: 0.9rem;">
+                        💡 Совет: Используйте этот текст с любым TTS сервисом для озвучивания
+                    </p>
+                </div>
+            `;
+        }
+
+        // Обработка Enter в textarea (Ctrl+Enter для отправки)
+        document.getElementById('prompt').addEventListener('keydown', function(e) {
+            if (e.ctrlKey && e.key === 'Enter') {
+                generate();
+            }
+        });
+    </script>
+</body>
+</html>
